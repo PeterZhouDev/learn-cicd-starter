@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -86,12 +87,16 @@ func main() {
 	v1Router.Get("/healthz", handlerReadiness)
 
 	router.Mount("/v1", v1Router)
+
 	srv := &http.Server{
 		Addr:              ":" + port,
 		Handler:           router,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
-	log.Printf("Serving on port: %s\n", port)
+	// Sanitize port string to prevent log injection (G706)
+	cleanPort := strings.ReplaceAll(strings.ReplaceAll(port, "\n", ""), "\r", "")
+	log.Printf("Serving on port: %s\n", cleanPort)
+
 	log.Fatal(srv.ListenAndServe())
 }
